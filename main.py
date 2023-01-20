@@ -11,24 +11,30 @@ master.geometry('500x500')
 
 def login():
     '''Login for login session'''
-    path = './users'  # Need to change the path to the user file
-    users_acc = os.listdir(path)
-    login_name = temp_login_id.get()
+    path = 'ident.txt'
+    login_id = temp_login_id.get()
     login_password = temp_login_password.get()
-
-    for id in users_acc:
-        if id == login_name:
-            file = open(id, 'r')
-            data = file.read()
-            data = data.split('\n')
-            password = data[1]
-
-            # Dashboard
+    # cherche the id in 'ident.txt'
+    file = open(path, 'r')
+    data = file.readlines()
+    total = len(data)
+    print(data)
+    print(data[0][:8])
+    # loop for searching the id in the file
+    for i in range(total):
+        data[i] = data[i].split('*')
+        print(data[i])
+        line_id = data[i][0]
+        password = data[i][1]
+        if login_id == line_id:
+            print('id found')
             if login_password == password:
-                master.destroy
+                master.destroy  # need to be fixed
                 acc_dashboard = Tk()
                 acc_dashboard.title('Dashboard')
-                return
+                return True
+    print('id not found')
+    return False
 
 
 # Vars
