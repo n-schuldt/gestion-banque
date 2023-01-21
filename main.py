@@ -8,12 +8,33 @@ master.geometry('500x500')
 
 # functions
 
+def cesar(text, key=3, encrypted = True ):
+    '''Str x Int --> Str
+    Function to encrypt or decrypt a text'''
+    if encrypted:
+        text = str(text)
+        encrypt = ''
+        for i in text:
+            ascii_lst = ord(i) + key
+            encrypt += chr(ascii_lst)
+        return encrypt
+    else : 
+        decrypt = ''
+        for i in text: 
+            ascii_lst = ord(i) - key
+            decrypt += chr(ascii_lst)
+        return decrypt
+
+# need to add cesar function to login fuction
 
 def login():
     '''Login for login session'''
     path = 'ident.txt'
     login_id = temp_login_id.get()
     login_password = temp_login_password.get()
+    login_id = cesar(login_id)
+    login_password = cesar(login_password)
+    
     # cherche the id in 'ident.txt'
     file = open(path, 'r')
     data = file.readlines()
