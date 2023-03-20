@@ -1,0 +1,10 @@
+CPT*Compte A
+BUD*sorties*300.0*Compte A
+BUD*divers*1000.0*Compte A
+OPE*01/01/2022*cinema*Compte A*18.5*CB*False*sorties
+OPE*12/01/2022*anniversaire*Compte A*50.0*VIR*True*divers
+OPE*15/03/2023*test*Compte A*-10.0*CB*False*sorties
+CPT*Compte B
+BUD*alimentation*500.0*Compte B
+BUD*alimentation*400.0*Compte B
+OPE*06/01/2022*galette*Compte B*10.54*CB*True*alimentation
