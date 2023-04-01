@@ -142,24 +142,71 @@ class Page1(tk.Frame):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="Page 1", font=LARGEFONT)
         label.grid(row=0, column=4, padx=10, pady=10)
+        
+        # usefull functions
+        def importer_donnees(identifiant_utilisateur):
+            """
+            None -> dict
+            Lit le fichier et retourne le contenu en dict
+            """
+            global dict_utilisateur
+            dict_utilisateur = {}
+            with open(f"{identifiant_utilisateur}.txt") as f:
+                contenu = f.read()
+                # contenu = decryptage_cesar(cle, contenu)
+                # pour chaque ligne du fichier
+
+                for ligne in contenu.splitlines(): 
+                    info = ligne.split("*")
+                    if info[0] == "CPT":
+                        dict_utilisateur[info[1]] = {"budgets": [], "operations": []}
+                    elif info[0] == "OPE":
+                        dict_utilisateur[info[3]]["operations"].append(
+                            {"date": info[1], "nom": info[2], "montant": float(info[4]), "type": info[5], "statut": info[6], "budget": info[7]})
+                    elif info[0] == "BUD":
+                        dict_utilisateur[info[3]]["budgets"].append(
+                            {"nom": info[1], "montant": float(info[2])})
+                return dict_utilisateur
+        
+        def calculer_solde(compte): # numero_identification -> compte
+            """Dict, Str -> Float
+            Calcule le solde du compte."""
+            solde = 0
+            for operation in dict_utilisateur[compte]["operations"]:
+                if operation["statut"] == "True":
+                    solde += operation["montant"]
+            return solde
+        
+        # create label for displaying solde
+        self.solde_label = ttk.Label(self, text="", font=LARGEFONT)
+        self.solde_label.grid(row=0, column=2, padx=10, pady=10)
+        
+        # calculate and update solde label
+        dict_utilisateur = importer_donnees(numero_identification) # numero_identification -> compte (need to be global)
+        solde = calculer_solde(dict_utilisateur)
+        self.solde_label.configure(text=f"Solde: {solde}€")
 
         # button to show frame 2 with text
         # layout2
-        button1 = ttk.Button(self, text="LoginPage",
+        logout_button = ttk.Button(self, text="LoginPage",
                              command=lambda: controller.show_frame(LoginPage))
 
-        # putting the button in its place
-        # by using grid
-        button1.grid(row=1, column=1, padx=10, pady=10)
+        # putting the button in its place by using grid
+        logout_button.grid(row=1, column=1, padx=10, pady=10)
 
         # button to show frame 2 with text
         # layout2
-        button2 = ttk.Button(self, text="Page 2",
+        bank_manager = ttk.Button(self, text="Bank manager",
                              command=lambda: controller.show_frame(Page2))
+        # putting the button in its place by using grid
+        bank_manager.grid(row=2, column=1, padx=10, pady=10)
 
-        # putting the button in its place by
-        # using grid
-        button2.grid(row=2, column=1, padx=10, pady=10)
+        # button to show frame 3 with text
+        # layout3
+        budget_manager = ttk.Button(self, text="Budget manager",
+                             command=lambda: controller.show_frame(Page3))
+        # putting the button in its place by using grid
+        budget_manager.grid(row=1, column=2, padx=10, pady=10)
 
 
 # third window frame page2
