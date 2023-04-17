@@ -5,6 +5,8 @@ from tkinter import messagebox
 import random
 import datetime
 
+LARGEFONT = ("Verdana", 35)
+
 
 def check_identification(numero_identification, mot_de_passe, fichier="ident.txt"):
     """
@@ -14,7 +16,7 @@ def check_identification(numero_identification, mot_de_passe, fichier="ident.txt
     sont corrects, False sinon
     """
 
-    # numero_identification = "00000000"  # a enlever
+    numero_identification = "00000000"  # a enlever
     mot_de_passe = "111111"  # a enlever
 
     with open(fichier) as f:
@@ -39,7 +41,7 @@ def importer_donnees(identifiant_utilisateur):
     """
     global dict_utilisateur
     dict_utilisateur = {}
-    with open(f"{identifiant_utilisateur}.txt") as f:
+    with open(f"00000000.txt") as f:  # a enlever
         contenu = f.read()
         # contenu = decryptage_cesar(cle, contenu)
         # pour chaque ligne du fichier
@@ -66,7 +68,7 @@ class BankingApp(tk.Tk):
         self.title("Banking App")
 
         self.frames = {}
-        for FrameClass in (LoginPage, DashboardPage, Comptes, Budgets):
+        for FrameClass in (LoginPage, DashboardPage, Comptes, Budget, AffichBud, AffichOpe, AjoutBud, ModiffBud, NewBud):
             frame = FrameClass(self)
             self.frames[FrameClass] = frame
             frame.grid(row=0, column=0, sticky='nsew')
@@ -82,6 +84,12 @@ class BankingApp(tk.Tk):
         dashboard_frame.set_username(username)
 
     def set_dict(self, identifiant):
+        """
+        str -> None
+        Met a jour le dictionnaire de l'utilisateur avec les donnees du fichier
+        dans tous les frames
+        """
+
         dashboard_frame = self.frames[DashboardPage]
         dict_utilisateur = importer_donnees(identifiant)
 
@@ -89,8 +97,20 @@ class BankingApp(tk.Tk):
         comptes_frame = self.frames[Comptes]
         comptes_frame.set_dict(dict_utilisateur)
 
-        budgets_frame = self.frames[Budgets]
+        budgets_frame = self.frames[Budget]
         budgets_frame.set_dict(dict_utilisateur)
+
+        affichbud_frame = self.frames[AffichBud]
+        affichbud_frame.set_dict(dict_utilisateur)
+
+        affichope_frame = self.frames[AffichOpe]
+        affichope_frame.set_dict(dict_utilisateur)
+
+        ajoutbud_frame = self.frames[AjoutBud]
+        ajoutbud_frame.set_dict(dict_utilisateur)
+
+        modiffbud_frame = self.frames[ModiffBud]
+        modiffbud_frame.set_dict(dict_utilisateur)
 
 
 class LoginPage(tk.Frame):
@@ -181,7 +201,7 @@ class DashboardPage(tk.Frame):
         self.comptes_button.grid(row=0, column=0, padx=5, pady=5)
 
         self.budgets_button = tk.Button(self.navbar, text="Budgets",
-                                        command=lambda: master.show_frame(Budgets))
+                                        command=lambda: master.show_frame(Budget))
         self.budgets_button.grid(row=0, column=1, padx=5, pady=5)
 
         self.deconnection_button = tk.Button(self.navbar, text="Deconnection",
@@ -329,38 +349,383 @@ class Comptes(tk.Frame):
             text=f"Solde du compte : {self.calculer_solde(self.dict_utilisateur, self.compteCombo)}")
 
 
-class Budgets(tk.Frame):
+class Budget(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.dict_utilisateur = {"Compte A": {
-            "budgets": [{}], "operations": [{}]}}
+        self.dict_utilisateur = {
+            "Compte A": {
+                "budgets": [
+                    {"nom": "sorties", "montant": 300.0},
+                    {"nom": "divers", "montant": 1000.0}
+                ],
+                "operations": [
+                    {"date": "01/01/2022", "nom": "cinema", "montant": 18.5,
+                     "type": "CB", "statut": "False", "budget": "sorties"}
+                ]
+            },
+            "Compte B": {
+                "budgets": [
+                    {"nom": "alimentation", "montant": 500.0},
+                    {"nom": "alimentation 2", "montant": 400.0}
+                ],
+                "operations": [
+                    {"date": "06/01/2022", "nom": "galette", "montant": 10.54,
+                     "type": "CB", "statut": "True", "budget": "alimentation"}
+                ]
+            }
+        }
 
-        # titre
-        self.label = tk.Label(self, text="Gestion des budgets")
-        self.label.pack(padx=5, pady=5)
+        tk.Frame.__init__(self,  master)
+        label = ttk.Label(self, text="Budget", font=LARGEFONT)
+        label.grid(row=0, column=4, padx=10, pady=10)
 
-        # bouton pour revenir au dashboard
-        self.button = tk.Button(self, text="Retour au dashboard",
-                                command=lambda: master.show_frame(DashboardPage))
-        self.button.pack(padx=5, pady=5)
+        # button to show frame 2 with text
+        # layout2
+        button1 = ttk.Button(self, text="Retour",
+                             command=lambda:  master.show_frame(DashboardPage))
 
-        # liste des budgets
-        self.liste_budgets = tk.Listbox(self)
-        self.liste_budgets.pack(padx=5, pady=5)
+        # putting the button in its place by
+        # using grid
+        button1.grid(row=1, column=1, padx=10, pady=10)
 
-        # remplissage de la liste des budgets
-        for compte in self.dict_utilisateur:
-            for budget in self.dict_utilisateur[compte]["budgets"]:
-                self.liste_budgets.insert(tk.END, budget)
+        # putting the button in its place by
+        ButAffBud = tk.Button(self,
+                              text="Afficher mes budgets",
+                              command=lambda:  master.show_frame(AffichBud),
+                              height=3,
+                              width=30)
+
+        ButAffBud.grid(row=1, column=4, padx=10, pady=10)
+
+        ButAffOpe = tk.Button(self,
+                              text="Afficher les opérations d'un budget",
+                              command=lambda:  master.show_frame(AffichOpe),
+                              height=3,
+                              width=30)
+
+        ButAffOpe.grid(row=2, column=4, padx=30, pady=30)
+
+        ButAjouBud = tk.Button(self,
+                               text="Ajouter ou modifier un budget",
+                               command=lambda:  master.show_frame(AjoutBud),
+                               height=3,
+                               width=30)
+
+        ButAjouBud.grid(row=3, column=4, padx=30, pady=30)
 
     def set_dict(self, dict_utilisateur):
+        """Dict -> None
+        Met à jour le dictionnaire de l'utilisateur."""
+
         self.dict_utilisateur = dict_utilisateur
-        # remplissage de la liste des budgets
-        self.liste_budgets.delete(0, tk.END)
-        for compte in self.dict_utilisateur:
-            for budget in self.dict_utilisateur[compte]["budgets"]:
-                self.liste_budgets.insert(tk.END, budget)
+
+
+class AffichBud(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        tk.Frame.__init__(self,  master)
+
+        self.dict_utilisateur = {}
+
+        label = ttk.Label(self, text="Afficher mes budgets", font=LARGEFONT)
+        label.grid(row=0, column=4, padx=10, pady=10)
+        # button to show frame 2 with text
+        # layout2
+        button1 = ttk.Button(self, text="Comptes",
+                             command=lambda:  master.show_frame(Comptes))
+
+        # putting the button in its place by
+        # using grid
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        # button to show frame 3 with text
+        # layout3
+        button2 = ttk.Button(self, text="Déconnexion",
+                             command=lambda:  master.show_frame(LoginPage))
+        # putting the button in its place by
+        # using grid
+        button2.grid(row=3, column=1, padx=10, pady=10)
+
+        button3 = ttk.Button(self, text="Budget",
+                             command=lambda:  master.show_frame(Budget))
+
+        # putting the button in its place by
+        # using grid
+        button3.grid(row=2, column=1, padx=10, pady=10)
+        # Créer un widget Treeview
+        self.tableau = ttk.Treeview(
+            self, columns=('Budget', 'Montant', 'Solde'))
+        tableau = self.tableau
+
+        # Ajouter les colonnes
+        tableau.heading('#0', text='Compte')
+        tableau.heading('Budget', text='Budget')
+        tableau.heading('Montant', text='Montant')
+        tableau.heading('Solde', text='Solde')
+
+        # Afficher le tableau
+        tableau.grid(row=1, column=4, padx=10, pady=10)
+
+    def set_dict(self, dict_utilisateur):
+        """Dict -> None
+        Met à jour le dictionnaire de l'utilisateur."""
+
+        print("set_dict", dict_utilisateur)
+        self.dict_utilisateur = dict_utilisateur
+
+       # Actualiser le tableau
+        self.tableau.delete(*self.tableau.get_children())
+        for compte, dict_compte in self.dict_utilisateur.items():
+            for budget in dict_compte["budgets"]:
+                self.tableau.insert(
+                    '', 'end', text=compte, values=(budget["nom"],
+                                                    budget["montant"],
+                                                    budget["montant"]))
+
+        self.tableau.grid(row=1, column=4, padx=10, pady=10)
+
+
+class AffichOpe(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.dict_utilisateur = {}
+
+        tk.Frame.__init__(self,  master)
+        label = ttk.Label(
+            self, text="Afficher les opérations d'un budget", font=LARGEFONT)
+        label.grid(row=0, column=4, padx=10, pady=10)
+        # button to show frame 2 with text
+        # layout2
+        button1 = ttk.Button(self, text="Comptes",
+                             command=lambda:  master.show_frame(Comptes))
+
+        # putting the button in its place by
+        # using grid
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        # button to show frame 3 with text
+        # layout3
+        button2 = ttk.Button(self, text="Déconnexion",
+                             command=lambda:  master.show_frame(LoginPage))
+        # putting the button in its place by
+        # using grid
+        button2.grid(row=3, column=1, padx=10, pady=10)
+
+        button3 = ttk.Button(self, text="Budget",
+                             command=lambda:  master.show_frame(Budget))
+
+        # putting the button in its place by
+        # using grid
+        button3.grid(row=2, column=1, padx=10, pady=10)
+
+        listeCombo1 = ttk.Combobox(self, values=["Compte A", "Compte B"])
+        listeCombo1.current(None)
+        listeCombo1.grid(row=1, column=4, padx=0, pady=5)
+
+        listeCombo2 = ttk.Combobox(
+            self, values=["Sorties", "Divers", "Cinema", "Alimentation"])
+        listeCombo2.current(None)
+        listeCombo2.grid(row=2, column=4, padx=0, pady=5)
+
+        listeCombo3 = ttk.Combobox(self, values=["Janvier", "février", "mars", "avril",
+                                   "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"])
+        listeCombo3.current(None)
+        listeCombo3.grid(row=3, column=4, padx=0, pady=5)
+
+        # Créer un widget Treeview
+        tableau = ttk.Treeview(self, columns=('Libellé', 'Montant', 'Type'))
+
+        # Ajouter les colonnes
+        tableau.heading('#0', text='Date')
+        tableau.heading('Libellé', text='Libellé')
+        tableau.heading('Montant', text='Montant')
+        tableau.heading('Type', text='Type')
+
+        # Ajouter des données a partir du dictionnaire
+        for key, value in self.dict_utilisateur.items():
+            tableau.insert(parent='', index='end', iid=1, text=(
+                key), values=(value[0], value[1], value[2]))
+
+        tableau.grid(row=4, column=4, padx=30, pady=30)
+
+    def set_dict(self, dict_utilisateur):
+        """Dict -> None
+        Met à jour le dictionnaire de l'utilisateur."""
+
+        self.dict_utilisateur = dict_utilisateur
+
+
+class AjoutBud(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        tk.Frame.__init__(self, master)
+
+        self.dict_utilisateur = {}
+
+        label = ttk.Label(
+            self, text="Ajouter ou Modifier un budget", font=LARGEFONT)
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="Comptes",
+                             command=lambda:  master.show_frame(Comptes))
+
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        button2 = ttk.Button(self, text="Déconnexion",
+                             command=lambda:  master.show_frame(LoginPage))
+
+        button2.grid(row=3, column=1, padx=10, pady=10)
+
+        button3 = ttk.Button(self, text="Budget",
+                             command=lambda:  master.show_frame(Budget))
+
+        button3.grid(row=2, column=1, padx=10, pady=10)
+
+        AjouteBud = tk.Button(self,
+                              text="Nouveau Budget",
+                              command=lambda:  master.show_frame(NewBud),
+                              height=3,
+                              width=30)
+        AjouteBud.grid(row=3, column=4, padx=10, pady=10)
+
+        ModifBud = tk.Button(self,
+                             text="Modifier un Budget",
+                             command=lambda:  master.show_frame(ModiffBud),
+                             height=3,
+                             width=30)
+        ModifBud.grid(row=4, column=4, padx=30, pady=30)
+
+    def set_dict(self, dict_utilisateur):
+        """Dict -> None
+        Met à jour le dictionnaire de l'utilisateur."""
+
+        self.dict_utilisateur = dict_utilisateur
+
+
+class NewBud(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        tk.Frame.__init__(self,  master)
+
+        self.dict_utilisateur = {}
+
+        label = ttk.Label(
+            self, text="Entrez les infos du nouveau Budget", font=LARGEFONT)
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="Comptes",
+                             command=lambda:  master.show_frame(Comptes))
+
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        button2 = ttk.Button(self, text="Déconnexion",
+                             command=lambda:  master.show_frame(LoginPage))
+
+        button2.grid(row=3, column=1, padx=10, pady=10)
+
+        button3 = ttk.Button(self, text="Ajouter ou Modifier",
+                             command=lambda:  master.show_frame(AjoutBud))
+        button3.grid(row=2, column=1, padx=10, pady=10)
+
+        def recuperer_texte():
+            # Récupérer le texte entré par l'utilisateur
+            texte1 = entree1.get()
+            texte2 = entree2.get()
+            texte3 = entree3.get()
+            # Afficher le texte dans la console
+            print(texte1, texte2, texte3)
+
+        # Créer un champ d'entrée
+        entree1 = tk.Entry(self, text="Nom du budget")
+        etiquette1 = tk.Label(self, text='Nom du budget')
+        etiquette1.grid(row=1, column=2, padx=5, pady=5)
+        entree1.grid(row=2, column=2, padx=5, pady=5)
+        entree2 = tk.Entry(self, text="Montant du budget")
+        etiquette2 = tk.Label(self, text='Montant du budget')
+        etiquette2.grid(row=3, column=2, padx=5, pady=5)
+        entree2.grid(row=4, column=2, padx=5, pady=5)
+        entree3 = tk.Entry(self, text="Solde du budget")
+        etiquette3 = tk.Label(self, text='Solde du budget')
+        etiquette3.grid(row=5, column=2, padx=5, pady=5)
+        entree3.grid(row=6, column=2, padx=5, pady=5)
+
+        # Créer un bouton pour récupérer le texte
+        bouton = tk.Button(self, text='terminer',
+                           height=3,
+                           width=10,
+                           command=recuperer_texte)
+        bouton.grid(row=3, column=3, padx=10, pady=10)
+
+    def set_dict(self, dict_utilisateur):
+        """Dict -> None
+        Met à jour le dictionnaire de l'utilisateur."""
+
+        self.dict_utilisateur = dict_utilisateur
+
+
+class ModiffBud(tk.Frame):
+    def __init__(self, master):
+        super().__init__(master)
+        tk.Frame.__init__(self,  master)
+
+        self.dict_utilisateur = {}
+
+        label = ttk.Label(
+            self, text="Quel budget voulez vous modifier?", font=LARGEFONT)
+        label.grid(row=0, column=4, padx=10, pady=10)
+
+        button1 = ttk.Button(self, text="Comptes",
+                             command=lambda:  master.show_frame(Comptes))
+
+        button1.grid(row=1, column=1, padx=10, pady=10)
+
+        button2 = ttk.Button(self, text="Déconnexion",
+                             command=lambda:  master.show_frame(LoginPage))
+
+        button2.grid(row=3, column=1, padx=10, pady=10)
+
+        button3 = ttk.Button(self, text="Ajouter ou Modifier",
+                             command=lambda:  master.show_frame(AjoutBud))
+        button3.grid(row=2, column=1, padx=10, pady=10)
+
+        listeCombo = ttk.Combobox(
+            self, values=["Sorties", "Divers", "Cinema", "Alimentation"], height=5, width=10,)
+        listeCombo.grid(row=1, column=2, padx=10, pady=10)
+
+        def recuperer_texte():
+            # Récupérer le texte entré par l'utilisateur
+            texte1 = entree1.get()
+            texte2 = entree2.get()
+            texte3 = entree3.get()
+            # Afficher le texte dans la console
+            print(texte1, texte2, texte3)
+
+        entree1 = tk.Entry(self, text="Nouveau Nom du Budget")
+        etiquette1 = tk.Label(self, text='Nouveau Nom du Budget')
+        etiquette1.grid(row=1, column=3, padx=5, pady=5)
+        entree1.grid(row=2, column=3, padx=5, pady=5)
+        entree2 = tk.Entry(self, text="Nouveau Montant du budget")
+        etiquette2 = tk.Label(self, text='Nouveau Montant du budget')
+        etiquette2.grid(row=3, column=3, padx=5, pady=5)
+        entree2.grid(row=4, column=3, padx=5, pady=5)
+        entree3 = tk.Entry(self, text="Nouveau Solde du budget")
+        etiquette3 = tk.Label(self, text='Nouveau Solde du budget')
+        etiquette3.grid(row=5, column=3, padx=5, pady=5)
+        entree3.grid(row=6, column=3, padx=5, pady=5)
+
+        bouton = tk.Button(self, text='terminer',
+                           height=3,
+                           width=10,
+                           command=recuperer_texte)
+        bouton.grid(row=3, column=4, padx=1, pady=1)
+
+    def set_dict(self, dict_utilisateur):
+        """Dict -> None
+        Met à jour le dictionnaire de l'utilisateur."""
+
+        self.dict_utilisateur = dict_utilisateur
 
 
 if __name__ == "__main__":
