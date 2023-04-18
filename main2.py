@@ -58,6 +58,13 @@ def importer_donnees(identifiant_utilisateur):
                 dict_utilisateur[info[3]]["budgets"].append(
                     {"nom": info[1], "montant": float(info[2])})
         return dict_utilisateur
+    
+def calculer_solde(compte):
+            solde = 0
+            for operation in dict_utilisateur[compte]["operations"]:
+                if operation["statut"] == "True":
+                    solde += operation["montant"]
+            return solde
 
 
 class BankingApp(tk.Tk):
@@ -181,41 +188,220 @@ class LoginPage(tk.Frame):
     #         self.username_entry.insert(0, "Invalid username or password")
 
 
+class Calculator(tk.Frame):
+    def __init__(self, master):
+        tk.Frame.__init__(self, master)
+
+        # AFFICHAGE
+        self.display_value = tk.StringVar()
+        self.display_value.set('0')
+        master.resizable(width=False, height=False) # Empêche le redimensionnement de la fenêtre
+        # Création du widget d'affichage
+        display = tk.Entry(self, textvariable=self.display_value, justify='right', font=('DejaVu Sans', 20))
+        display.grid(row=0, column=0, columnspan=4)
+
+        # Disposition des boutons
+        button_list = [
+            '7',  '8',  '9',  '/',
+            '4',  '5',  '6',  '*',
+            '1',  '2',  '3',  '-',
+            '0',  'C',  '=', '+'
+        ]
+
+        # Création des boutons et ajout à la calculatrice
+        r = 1
+        c = 0
+        for b in button_list:
+            tk.Button(self, text=b, width=5, height=2, font=('DejaVu Sans', 20), command=lambda x=b: self.button_press(x)).grid(row=r, column=c)
+            c += 1
+            if c > 3:
+                c = 0
+                r += 1
+
+        # initialisation des variables pour le calcul
+        self.current_value = 0
+        self.operator = ''
+
+    def button_press(self, value):
+        if value == 'C':
+            self.display_value.set('0')
+        elif value in ['+', '-', '*', '/']:
+            self.current_value = float(self.display_value.get())
+            self.operator = value
+            self.display_value.set('')
+        elif value == '=':
+            if self.operator == '+':
+                self.display_value.set(str(self.current_value + float(self.display_value.get())))
+            elif self.operator == '-':
+                self.display_value.set(str(self.current_value - float(self.display_value.get())))
+            elif self.operator == '*':
+                self.display_value.set(str(self.current_value * float(self.display_value.get())))
+            elif self.operator == '/':
+                self.display_value.set(str(self.current_value / float(self.display_value.get())))
+        else:
+            if self.display_value.get() == '0':
+                self.display_value.set(value)
+            else:
+                self.display_value.set(self.display_value.get() + value)
+
+#Class simulateur de crédit :
+
+class RealEstateSimulator(tk.Frame):
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Simulateur de crédit immobilier")
+        
+        # les variables de contrôle
+        self.loan_amount_var = tk.StringVar()
+        self.interest_rate_var = tk.StringVar()
+        self.loan_term_var = tk.StringVar()
+
+        # les champs de sortie
+        self.output_label = ttk.Label(self.master, text="")
+        self.output_label.grid(row=3, column=0, columnspan=2)
+
+        # les champs d'entrée
+        loan_amount_label = ttk.Label(self.master, text="Emprunt (€):")
+        loan_amount_label.grid(row=0, column=0, padx=5, pady=5)
+        loan_amount_entry = ttk.Entry(self.master, textvariable=self.loan_amount_var)
+        loan_amount_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        interest_rate_label = ttk.Label(self.master, text="Taux d'intérêt (%):")
+        interest_rate_label.grid(row=1, column=0, padx=5, pady=5)
+        interest_rate_entry = ttk.Entry(self.master, textvariable=self.interest_rate_var)
+        interest_rate_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        loan_term_label = ttk.Label(self.master, text="Durée (ans)")
+        loan_term_label.grid(row=2, column=0, padx=5, pady=5)
+        loan_term_entry = ttk.Entry(self.master, textvariable=self.loan_term_var)
+        loan_term_entry.grid(row=2, column=1, padx=5, pady=5)
+
+        # Define calculate button
+        calculate_button = ttk.Button(self.master, text="Calculer", command=self.calculate)
+        calculate_button.grid(row=4, column=0, columnspan=2, padx=5, pady=5)
+
+    def calculate(self):
+
+        """Calculer le paiement mensuel d'un prêt immobilier"""
+        
+        # récupérer les valeurs des champs d'entrée
+        try:
+            loan_amount = float(self.loan_amount_var.get())
+            interest_rate = float(self.interest_rate_var.get())
+            loan_term = float(self.loan_term_var.get())
+        except ValueError:
+            messagebox.showerror("Invalide", "Veuillez entrer des valeurs numériques")
+            return
+
+        # calculer le paiement mensuel
+        monthly_interest_rate = interest_rate / 1200  # convertir le taux d'intérêt en pourcentage en taux mensuel
+        num_payments = loan_term * 12  # convertir les années en mois
+        monthly_payment = (loan_amount * monthly_interest_rate) / (1 - (1 + monthly_interest_rate)**(-num_payments)) # formule de calcul du paiement mensuel
+
+        # afficher le résultat
+        self.output_label.configure(text=f"Vous devrez payer {monthly_payment:.2f}€ par mois.") # afficher le résultat avec 2 chiffre après la virgule
+
+#Class pour la fenêtre Menu :
 class DashboardPage(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        
+        self.master = master
 
-        # dictionnaire des utilisateurs, ceci change une fois qu'on se connecte
-        self.dict_utilisateur = {"Compte A": {
-            "budgets": [{}], "operations": [{}]}}
+        self.master.title("Menu")
+           
+        # Définir la couleur de fond
+        self.master.configure(bg='white')
+        
+        # Définir la taille de la fenêtre
+        self.master.geometry("800x600")
+        master.resizable(width=False, height=False) # Empêche le redimensionnement de la fenêtre
 
-        self.hello_label = tk.Label(self, text="")
-        self.hello_label.grid(row=0, column=0, padx=5, pady=5)
+        # Fonctions pour importer les données et calculer le solde
+         # A changer par l'identifiant de l'utilisateur (à récupérer dans le fichier login.py)
+        
+        
+#budget = calculer_solde(username)                 # A acriver lorsque le login sera fonctionnel
+#nom = username
 
-       # nav bar
-        self.navbar = tk.Frame(self)
-        self.navbar.grid(row=1, column=0, padx=5, pady=5)
+        # Créer des boutons ici (FRAME LEFT)
+        self.button = tk.Button(self, text="GESTION BUDGET", command=self.open_new_window, font=('DejaVu Sans', 15), width=20, height=5)
+        self.button.grid(row=1, column=0, padx=5, pady=5)
+        
+        self.button2 = tk.Button(self, text="GESTION COMPTE", command=self.open_new_window2, font=('DejaVu Sans', 15), width=20, height=5)
+        self.button2.grid(row=2, column=0, padx=5, pady=5)
 
-        self.comptes_button = tk.Button(self.navbar, text="Comptes",
-                                        command=lambda: master.show_frame(Comptes))
-        self.comptes_button.grid(row=0, column=0, padx=5, pady=5)
+        self.button3 = tk.Button(self, text="LOGOUT", command=self.logout, font=('DejaVu Sans', 15), width=10, height=2,  bg="red3", fg="white", activebackground="red3", activeforeground="white")
+        self.button3.grid(row=3, column=0, padx=5, pady=5)
+        
+        # Créer des label ici (FRAME CENTER)
+        self.budget_label = tk.Label(self, text="Solde : ", font=('DejaVu Sans', 40), fg="#675A8B")
+        self.budget_label.grid(row=2, column=1, padx=5, pady=5)
 
-        self.budgets_button = tk.Button(self.navbar, text="Budgets",
-                                        command=lambda: master.show_frame(Budget))
-        self.budgets_button.grid(row=0, column=1, padx=5, pady=5)
+        self.name_label = tk.Label(self, text="Bienvenue ", font=('DejaVu Sans', 30))
+        self.name_label.grid(row=1, column=1, padx=5, pady=5)
 
-        self.deconnection_button = tk.Button(self.navbar, text="Deconnection",
-                                             command=lambda: master.show_frame(LoginPage))
-        self.deconnection_button.grid(row=0, column=2, padx=5, pady=5)
 
-    def display_dict(self):
-        print("Dict", self.dict_utilisateur)
+        
+        # Créer des boutons ici (FRAME RIGHT)
+        self.calc_button = tk.Button(self, text="CALCULATRICE", command= self.open_calculator, font=('DejaVu Sans', 15), width=20, height=2,  bg="green", fg="black", activebackground="green", activeforeground="black")
+        self.calc_button.grid(row=1, column=2, padx=5, pady=5)
 
-    def set_username(self, username):
-        self.hello_label.config(text=f"Hello {username}")
+        self.estate_button = tk.Button(self, text="SIMULATEUR", command= self.real_estate_simulator, font=('DejaVu Sans', 15), width=20, height=2,  bg="green", fg="black", activebackground="green", activeforeground="black")
+        self.estate_button.grid(row=2, column=2, padx=5, pady=5)
 
-    def set_dict(self, dict_utilisateur):
-        self.dict_utilisateur = dict_utilisateur
+        # Afficher le budget dans le label
+
+#self.budget_label.config(text="Votre solde est de\n+{}€".format(budget))
+#self.name_label.config(text="Bienvenue {}".format(nom)) # A changer par le nom de l'utilisateur (à récupérer dans le fichier login.py
+        
+            
+    def logout(self) : 
+        self.master.destroy()
+        
+
+    #nouvelle fenêtre pour la gestion du budget
+    def open_new_window(self):
+        """Ouvre une nouvelle fenêtre (Gestion Budget)"""
+        # Cée une nouvelle fenêtre ici
+        asset_manager_window = tk.Toplevel(self.master)
+        asset_manager_window.title("Gestion Budget")
+       
+#window = GestionBudget(asset_manager_window)        #A activer quand la classe GestionBudget sera créée
+#window.pack()
+
+
+    #nouvelle fenêtre pour la gestion du compte
+    def open_new_window2(self) : 
+        """Ouvre une nouvelle fenêtre (Gestion Compte))"""
+        # Crée une nouvelle fenêtre ici
+        account_manager_window = tk.Toplevel(self.master)
+        account_manager_window.title("Gestion Compte")
+
+#window = GestionCompte(account_manager_window)        #A activer quand la classe GestionCompte sera créée
+#window.pack()
+
+
+    #nouvelle fenêtre pour le simulateur d'emprunt
+    def real_estate_simulator(self):
+        """Ouvre une nouvelle fenêtre (Emprunt)"""
+        # Crée une nouvelle fenêtre ici
+        real_estate_window = tk.Toplevel(self.master)
+        real_estate_window.title("Emprunt")
+        # Créer des widgets pour la nouvelle fenêtre ici
+        loan = RealEstateSimulator(real_estate_window)
+        loan.pack()
+
+    #nouvelle fenêtre pour la calculatrice
+    def open_calculator(self):
+        """Ouvre une nouvelle fenêtre avec une calculatrice"""
+        # Crée une nouvelle fenêtre ici
+        calculator_window = tk.Toplevel(self.master)
+        calculator_window.title("Calculatrice")
+        # Créer des widgets pour la nouvelle fenêtre ici
+        calculator = Calculator(calculator_window)
+        calculator.pack()
+
 
 
 class Comptes(tk.Frame):
