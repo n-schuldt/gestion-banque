@@ -372,8 +372,8 @@ class DashboardPage(tk.Frame):
         asset_manager_window = tk.Toplevel(self.master)
         asset_manager_window.title("Gestion Budget")
        
-#window = GestionBudget(asset_manager_window)        #A activer quand la classe GestionBudget sera créée
-#window.pack()
+        window = Comptes(asset_manager_window)        #A activer quand la classe GestionBudget sera créée
+        window.pack()
 
 
     #nouvelle fenêtre pour la gestion du compte
@@ -383,8 +383,8 @@ class DashboardPage(tk.Frame):
         account_manager_window = tk.Toplevel(self.master)
         account_manager_window.title("Gestion Compte")
 
-#window = GestionCompte(account_manager_window)        #A activer quand la classe GestionCompte sera créée
-#window.pack()
+        window = Budget(account_manager_window)        #A activer quand la classe GestionCompte sera créée
+        window.pack()
 
 
     #nouvelle fenêtre pour le simulateur d'emprunt
