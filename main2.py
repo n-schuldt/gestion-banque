@@ -317,12 +317,11 @@ class DashboardPage(tk.Frame):
         self.master.geometry("800x600")
         master.resizable(width=False, height=False) # Empêche le redimensionnement de la fenêtre
 
-        # Fonctions pour importer les données et calculer le solde
-         # A changer par l'identifiant de l'utilisateur (à récupérer dans le fichier login.py)
-        
-        
-#budget = calculer_solde(username)                 # A acriver lorsque le login sera fonctionnel
-#nom = username
+        # Fonctions pour calculer le solde
+    
+        def set_username(self, username):
+            budget = calculer_solde(username)
+
 
         # Créer des boutons ici (FRAME LEFT)
         self.button = tk.Button(self, text="GESTION BUDGET", command=self.open_new_window, font=('DejaVu Sans', 15), width=20, height=5)
@@ -352,8 +351,10 @@ class DashboardPage(tk.Frame):
 
         # Afficher le budget dans le label
 
-#self.budget_label.config(text="Votre solde est de\n+{}€".format(budget))
-#self.name_label.config(text="Bienvenue {}".format(nom)) # A changer par le nom de l'utilisateur (à récupérer dans le fichier login.py
+        self.budget_label.config(text="Votre solde est de\n+{}€".format(budget))
+
+        def set_username(self, username) :
+            self.name_label.config(text="Bienvenue {}".format(username))
         
             
     def logout(self) : 
