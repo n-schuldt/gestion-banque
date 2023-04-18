@@ -319,8 +319,7 @@ class DashboardPage(tk.Frame):
 
         # Fonctions pour calculer le solde
     
-        def set_username(self, username):
-            budget = calculer_solde(username)
+        budget = 1000 # Budget a modifier
 
 
         # Créer des boutons ici (FRAME LEFT)
@@ -337,7 +336,7 @@ class DashboardPage(tk.Frame):
         self.budget_label = tk.Label(self, text="Solde : ", font=('DejaVu Sans', 40), fg="#675A8B")
         self.budget_label.grid(row=2, column=1, padx=5, pady=5)
 
-        self.name_label = tk.Label(self, text="Bienvenue ", font=('DejaVu Sans', 30))
+        self.name_label = tk.Label(self, text="", font=('DejaVu Sans', 30))
         self.name_label.grid(row=1, column=1, padx=5, pady=5)
 
 
@@ -352,11 +351,16 @@ class DashboardPage(tk.Frame):
         # Afficher le budget dans le label
 
         self.budget_label.config(text="Votre solde est de\n+{}€".format(budget))
-
-        def set_username(self, username) :
-            self.name_label.config(text="Bienvenue {}".format(username))
         
-            
+    def set_username(self, username):
+        self.name_label.config(text="Bienvenue {}".format(username))
+    
+    def display_dict(self):
+        print("Dict", self.dict_utilisateur)
+
+    def set_dict(self, dict_utilisateur):
+        self.dict_utilisateur = dict_utilisateur
+
     def logout(self) : 
         self.master.destroy()
         
