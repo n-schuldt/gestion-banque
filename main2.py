@@ -562,17 +562,52 @@ class AffichBud(tk.Frame):
 class AffichOpe(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
+        tk.Frame.__init__(self, master)
 
-        self.dict_utilisateur = {}
+        self.dict_utilisateur = {
+            "Compte A": {
+                "budgets": [
+                    {"nom": "sorties", "montant": 300.0},
+                    {"nom": "divers", "montant": 1000.0}
+                ],
+                "operations": [
+                    {"date": "01/01/2022", "nom": "cinema", "montant": 18.5,
+                     "type": "CB", "statut": "False", "budget": "sorties"},
+                    {"date": "12/01/2022", "nom": "anniversaire", "montant": 50.0,
+                     "type": "VIR", "statut": "True", "budget": "divers"},
+                    {"date": "15/03/2023", "nom": "test", "montant": -10.0,
+                     "type": "CB", "statut": "False", "budget": "sorties"}
+                ]
+            },
+            "Compte B": {
+                "budgets": [
+                    {"nom": "alimentation", "montant": 500.0},
+                    {"nom": "divers", "montant": 400.0}
+                ],
+                "operations": [
+                    {"date": "06/01/2022", "nom": "galette", "montant": 10.54,
+                     "type": "CB", "statut": "True", "budget": "alimentation"}
+                ]
+            },
+            "Compte C": {
+                "budgets": [
+                    {"nom": "asfsadfsdf", "montant": 500.0},
+                    {"nom": "bbbbbbbb", "montant": 400.0}
+                ],
+                "operations": [
+                    {"date": "06/01/2022", "nom": "galette", "montant": 10.54,
+                     "type": "CB", "statut": "True", "budget": "alimentation"}
+                ]
+            }
+        }
 
-        tk.Frame.__init__(self,  master)
         label = ttk.Label(
             self, text="Afficher les opérations d'un budget", font=LARGEFONT)
         label.grid(row=0, column=4, padx=10, pady=10)
         # button to show frame 2 with text
         # layout2
         button1 = ttk.Button(self, text="Comptes",
-                             command=lambda:  master.show_frame(Comptes))
+                             command=lambda: master.show_frame(Comptes))
 
         # putting the button in its place by
         # using grid
@@ -581,31 +616,46 @@ class AffichOpe(tk.Frame):
         # button to show frame 3 with text
         # layout3
         button2 = ttk.Button(self, text="Déconnexion",
-                             command=lambda:  master.show_frame(LoginPage))
+                             command=lambda: master.show_frame(LoginPage))
         # putting the button in its place by
         # using grid
         button2.grid(row=3, column=1, padx=10, pady=10)
 
         button3 = ttk.Button(self, text="Budget",
-                             command=lambda:  master.show_frame(Budget))
+                             command=lambda: master.show_frame(Budget))
 
         # putting the button in its place by
         # using grid
         button3.grid(row=2, column=1, padx=10, pady=10)
 
-        listeCombo1 = ttk.Combobox(self, values=["Compte A", "Compte B"])
-        listeCombo1.current(None)
+        comptes = list(self.dict_utilisateur.keys())
+
+        listeCombo1 = ttk.Combobox(self, values=["-"] + comptes)
+        listeCombo1.current(0)
         listeCombo1.grid(row=1, column=4, padx=0, pady=5)
 
-        listeCombo2 = ttk.Combobox(
-            self, values=["Sorties", "Divers", "Cinema", "Alimentation"])
-        listeCombo2.current(None)
-        listeCombo2.grid(row=2, column=4, padx=0, pady=5)
+        listeComboBud = ttk.Combobox(self, values=list(
+            self.dict_utilisateur.values()), height=5, width=10,)
+        listeComboBud.grid(row=1, column=2, padx=10, pady=10)
 
-        listeCombo3 = ttk.Combobox(self, values=["Janvier", "février", "mars", "avril",
-                                   "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"])
-        listeCombo3.current(None)
+        budgets = ['-']
+        for compte in self.dict_utilisateur.values():
+            for b in compte['budgets']:
+                budgets.append(b['nom'])
+        print(budgets)
+
+        listeComboBud.configure(values=budgets, height=5)
+        listeComboBud.grid(row=2, column=4, padx=10, pady=5)
+
+        listeCombo3 = ttk.Combobox(self, values=[
+                                   "-", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"])
+        listeCombo3.current(0)
         listeCombo3.grid(row=3, column=4, padx=0, pady=5)
+
+        listeCombo4 = ttk.Combobox(
+            self, values=["-", "2019", "2020", "2021", "2022", "2023"])
+        listeCombo4.current(0)
+        listeCombo4.grid(row=1, column=3, padx=0, pady=5)
 
         # Créer un widget Treeview
         tableau = ttk.Treeview(self, columns=('Libellé', 'Montant', 'Type'))
@@ -616,18 +666,92 @@ class AffichOpe(tk.Frame):
         tableau.heading('Montant', text='Montant')
         tableau.heading('Type', text='Type')
 
-        # Ajouter des données a partir du dictionnaire
-        for key, value in self.dict_utilisateur.items():
-            tableau.insert(parent='', index='end', iid=1, text=(
-                key), values=(value[0], value[1], value[2]))
+        # Parcourir les données du dictionnaire dict_utilisateur
+        for compte, infos in self.dict_utilisateur.items():
+            for operation in infos["operations"]:
+                date = operation["date"]
+                libelle = operation["nom"]
+                montant = operation["montant"]
+                type_operation = operation["type"]
+                # Insérer les données dans le tableau
+                tableau.insert(parent='', index='end', text=date,
+                               values=(libelle, montant, type_operation))
 
+        # Afficher le tableau
         tableau.grid(row=4, column=4, padx=30, pady=30)
+        # Définir une fonction de filtrage des opérations
+
+        def filtrer_operations():
+            # Récupérer les valeurs sélectionnées dans les combobox
+            compte_selec = listeCombo1.get()
+            budget_selec = listeCombo2.get()
+            mois_selec = listeCombo3.get()
+            year_selec = listeCombo4.get()
+
+            print(compte_selec, budget_selec, mois_selec, year_selec)
+
+            # Effacer les données actuellement affichées dans le tableau
+            tableau.delete(*tableau.get_children())
+
+            # Parcourir les données du dictionnaire dict_utilisateur, filtrer et insérer les données dans le tableau
+            # Si la valeur sélectionnée dans la combobox est "-" (tous), on affiche toutes les données
+            for compte, infos in self.dict_utilisateur.items():
+                if compte_selec == "-" or compte_selec == compte:
+                    for operation in infos["operations"]:
+                        date = operation["date"]
+                        libelle = operation["nom"]
+                        montant = operation["montant"]
+                        type_operation = operation["type"]
+                        budget = operation["budget"]
+                        if (budget_selec == "-" or budget_selec == budget) and (mois_selec == "-" or mois_selec == date[3:5]) and (year_selec == "-" or year_selec == date[6:]):
+                            tableau.insert(parent='', index='end', text=date,
+                                           values=(libelle, montant, type_operation))
+
+        # Modifier les commandes des combobox pour appeler la fonction de filtrage
+        listeCombo1 = ttk.Combobox(
+            self, values=["-"] + comptes, state="readonly")
+        listeCombo1.current(0)
+        listeCombo1.grid(row=1, column=4, padx=0, pady=5)
+        listeCombo1.bind("<<ComboboxSelected>>",
+                         lambda event: filtrer_operations())
+
+        listeCombo2 = ttk.Combobox(self, values=(["-"] + list(
+            self.dict_utilisateur.values())), height=5, width=10, state="readonly")
+        listeCombo2.configure(values=budgets, height=10)
+        listeCombo2.current(0)
+        listeCombo2.grid(row=2, column=4, padx=0, pady=5)
+        listeCombo2.bind("<<ComboboxSelected>>",
+                         lambda event: filtrer_operations())
+
+        listeCombo3 = ttk.Combobox(self, values=[
+                                   "-", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], state="readonly")
+        listeCombo3.current(0)
+        listeCombo3.grid(row=3, column=4, padx=0, pady=5)
+        listeCombo3.bind("<<ComboboxSelected>>",
+                         lambda event: filtrer_operations())
+
+        listeCombo4 = ttk.Combobox(
+            self, values=["-", "2019", "2020", "2021", "2022", "2023"], state="readonly")
+        listeCombo4.current(0)
+        listeCombo4.grid(row=1, column=3, padx=0, pady=5)
+        listeCombo4.bind("<<ComboboxSelected>>",
+                         lambda event: filtrer_operations())
 
     def set_dict(self, dict_utilisateur):
         """Dict -> None
         Met à jour le dictionnaire de l'utilisateur."""
 
+        print("set_dict appelé", dict_utilisateur)
         self.dict_utilisateur = dict_utilisateur
+
+        # # Mettre à jour les combobox
+        # self.listeCombo1.configure(
+        #     values=["-"] + list(dict_utilisateur.keys()))
+        # self.listeCombo2.configure(
+        #     values=["-"] + list(dict_utilisateur.values()))
+
+        # # Mettre à jour le tableau
+        # self.filtrer_operations()
 
 
 class AjoutBud(tk.Frame):
@@ -680,7 +804,7 @@ class AjoutBud(tk.Frame):
 class NewBud(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        tk.Frame.__init__(self,  master)
+        tk.Frame.__init__(self, master)
 
         self.dict_utilisateur = {}
 
@@ -689,26 +813,29 @@ class NewBud(tk.Frame):
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Comptes",
-                             command=lambda:  master.show_frame(Comptes))
+                             command=lambda: master.show_frame(Comptes))
 
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         button2 = ttk.Button(self, text="Déconnexion",
-                             command=lambda:  master.show_frame(LoginPage))
+                             command=lambda: master.show_frame(LoginPage))
 
         button2.grid(row=3, column=1, padx=10, pady=10)
 
         button3 = ttk.Button(self, text="Ajouter ou Modifier",
-                             command=lambda:  master.show_frame(AjoutBud))
+                             command=lambda: master.show_frame(AjoutBud))
         button3.grid(row=2, column=1, padx=10, pady=10)
 
         def recuperer_texte():
             # Récupérer le texte entré par l'utilisateur
             texte1 = entree1.get()
             texte2 = entree2.get()
-            texte3 = entree3.get()
+            # Récupérer le choix du compte de l'utilisateur
+            compte = var_compte.get()
+            # Appeler la fonction pour ajouter le budget
+            ajouter_budget(compte, texte1, texte2)
             # Afficher le texte dans la console
-            print(texte1, texte2, texte3)
+            print(texte1, texte2, compte)
 
         # Créer un champ d'entrée
         entree1 = tk.Entry(self, text="Nom du budget")
@@ -719,61 +846,118 @@ class NewBud(tk.Frame):
         etiquette2 = tk.Label(self, text='Montant du budget')
         etiquette2.grid(row=3, column=2, padx=5, pady=5)
         entree2.grid(row=4, column=2, padx=5, pady=5)
-        entree3 = tk.Entry(self, text="Solde du budget")
-        etiquette3 = tk.Label(self, text='Solde du budget')
-        etiquette3.grid(row=5, column=2, padx=5, pady=5)
-        entree3.grid(row=6, column=2, padx=5, pady=5)
+
+        # Créer une variable pour le choix du compte
+        var_compte = tk.StringVar(self)
+        var_compte.set("Compte A")  # Définir la valeur par défaut
+        # Créer un menu déroulant pour choisir le compte
+        menu_compte = tk.OptionMenu(self, var_compte, "Compte A", "Compte B")
+        etiquette4 = tk.Label(self, text='Compte')
+        etiquette4.grid(row=7, column=2, padx=5, pady=5)
+        menu_compte.grid(row=8, column=2, padx=5, pady=5)
 
         # Créer un bouton pour récupérer le texte
         bouton = tk.Button(self, text='terminer',
                            height=3,
                            width=10,
                            command=recuperer_texte)
-        bouton.grid(row=3, column=3, padx=10, pady=10)
+        bouton.grid(row=3, column=4, padx=10, pady=10)
 
-    def set_dict(self, dict_utilisateur):
-        """Dict -> None
-        Met à jour le dictionnaire de l'utilisateur."""
+        def ajouter_budget(compte, nom_budget, montant_budget):
 
-        self.dict_utilisateur = dict_utilisateur
+            # Vérifier si le compte existe dans le dictionnaire de l'utilisateur
+            if compte in dict_utilisateur:
+                # Ajouter le nouveau budget au compte existant
+                nouveau_budget = {"nom": nom_budget,
+                                  "montant": float(montant_budget)}
+                dict_utilisateur[compte]["budgets"].append(nouveau_budget)
+
+            # Afficher le dictionnaire mis à jour dans la console
+            print(dict_utilisateur)
+
+            # Afficher un message de succès à l'utilisateur
+            messagebox.showinfo("Le nouveau budget a été ajouté avec succès.")
+
+            # Réinitialiser les champs d'entrée
+            entree1.delete(0, tk.END)
+            entree2.delete(0, tk.END)
+            var_compte.set("Compte A")
 
 
 class ModiffBud(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
-        tk.Frame.__init__(self,  master)
+        tk.Frame.__init__(self, master)
 
-        self.dict_utilisateur = {}
+        self.dict_utilisateur = {
+            "Compte A": {
+                "budgets": [
+                    {"nom": "sorties", "montant": 300.0},
+                    {"nom": "divers", "montant": 1000.0}
+                ],
+                "operations": [
+                    {"date": "01/01/2022", "nom": "cinema", "montant": 18.5,
+                     "type": "CB", "statut": "False", "budget": "sorties"}
+                ]
+            },
+            "Compte B": {
+                "budgets": [
+                    {"nom": "alimentation", "montant": 500.0},
+                    {"nom": "alimentation 2", "montant": 400.0}
+                ],
+                "operations": [
+                    {"date": "06/01/2022", "nom": "galette", "montant": 10.54,
+                     "type": "CB", "statut": "True", "budget": "alimentation"}
+                ]
+            }
+        }
 
         label = ttk.Label(
             self, text="Quel budget voulez vous modifier?", font=LARGEFONT)
         label.grid(row=0, column=4, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Comptes",
-                             command=lambda:  master.show_frame(Comptes))
+                             command=lambda: master.show_frame(Comptes))
 
         button1.grid(row=1, column=1, padx=10, pady=10)
 
         button2 = ttk.Button(self, text="Déconnexion",
-                             command=lambda:  master.show_frame(LoginPage))
+                             command=lambda: master.show_frame(LoginPage))
 
         button2.grid(row=3, column=1, padx=10, pady=10)
 
         button3 = ttk.Button(self, text="Ajouter ou Modifier",
-                             command=lambda:  master.show_frame(AjoutBud))
+                             command=lambda: master.show_frame(AjoutBud))
         button3.grid(row=2, column=1, padx=10, pady=10)
 
-        listeCombo = ttk.Combobox(
-            self, values=["Sorties", "Divers", "Cinema", "Alimentation"], height=5, width=10,)
+        listeCombo = ttk.Combobox(self, values=list(
+            self.dict_utilisateur.values()), height=5, width=10,)
         listeCombo.grid(row=1, column=2, padx=10, pady=10)
 
+        budgets = []
+        for compte in self.dict_utilisateur.values():
+            for b in compte['budgets']:
+                budgets.append(b['nom'])
+        listeCombo['values'] = budgets
+
         def recuperer_texte():
-            # Récupérer le texte entré par l'utilisateur
-            texte1 = entree1.get()
-            texte2 = entree2.get()
-            texte3 = entree3.get()
+            # Récupérer le nom du budget sélectionné dans la combobox
+            budget = listeCombo.get()
+            # Récupérer le texte entré par l'utilisateur dans les champs d'entrée
+            nouveau_nom = entree1.get()
+            nouveau_montant = float(entree2.get())
+
+            # Modifier le nom et le montant du budget dans le dictionnaire
+            for compte in dict_utilisateur.values():
+                for b in compte['budgets']:
+                    if b['nom'] == budget:
+                        b['nom'] = nouveau_nom
+                        b['montant'] = nouveau_montant
+
             # Afficher le texte dans la console
-            print(texte1, texte2, texte3)
+            print("Nouveau nom du budget:", nouveau_nom)
+            print("Nouveau montant du budget:", nouveau_montant)
+            print(dict_utilisateur)
 
         entree1 = tk.Entry(self, text="Nouveau Nom du Budget")
         etiquette1 = tk.Label(self, text='Nouveau Nom du Budget')
@@ -783,10 +967,6 @@ class ModiffBud(tk.Frame):
         etiquette2 = tk.Label(self, text='Nouveau Montant du budget')
         etiquette2.grid(row=3, column=3, padx=5, pady=5)
         entree2.grid(row=4, column=3, padx=5, pady=5)
-        entree3 = tk.Entry(self, text="Nouveau Solde du budget")
-        etiquette3 = tk.Label(self, text='Nouveau Solde du budget')
-        etiquette3.grid(row=5, column=3, padx=5, pady=5)
-        entree3.grid(row=6, column=3, padx=5, pady=5)
 
         bouton = tk.Button(self, text='terminer',
                            height=3,
