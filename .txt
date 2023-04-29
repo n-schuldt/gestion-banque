@@ -2,7 +2,6 @@ CPT*Compte A
 OPE*01/01/2022*cinema*Compte A*18.5*CB*False*sorties
 OPE*12/01/2022*anniversaire*Compte A*50.0*VIR*True*divers
 OPE*15/03/2023*test*Compte A*-10.0*CB*False*sorties
-OPE*01/02/2023*restaurant*Compte A*24.4*CB*True*sorties
 BUD*sorties*300.0*Compte A
 BUD*divers*1000.0*Compte A
 CPT*Compte B
